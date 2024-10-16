@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    user: "33"
+    ports:
+      - 8000:80
+    volumes:
+      - ./code:/var/www/html
+      - ./app.conf:/etc/apache2/sites-enabled/app.conf
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MS_ROOT_PASS}"
+      MYSQL_DATABASE: yii2basic
+      MYSQL_USER: user
+      MYSQL_PASSWORD: "${MS_USER_PASS}"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

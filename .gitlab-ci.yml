@@ -1,0 +1,40 @@
+image: php:7.4
+
+variables:
+  REGISTRY: "my-local.gitlab.yandexcloud.net:5050"
+  TAG: "${CI_PROJECT_NAME}_${CI_COMMIT_SHORT_SHA}"
+stages:
+  - build
+  - test
+  - create_image
+
+build_dev:
+  stage: build
+  script:
+    - apt-get update && apt-get install -y git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install
+    - echo "Build completed successfully!"
+  only:
+    - develop
+
+test_codeception:
+  stage: test
+  script:
+    - vendor/bin/codecept run
+  only:
+    - develop
+  dependencies:
+    - build_dev
+  
+bulid_container:
+  stage: create_image
+  script:
+    - echo $TOKEN | docker login $REGISTRY -u dmitiry --password-stdin
+    - docker build -t ${REGISTRY}:${TAG}
+    - docker push ${REGISTRY}:${TAG}
+  only:
+    - develop
+  dependencies:
+    - test_codeception
+    
